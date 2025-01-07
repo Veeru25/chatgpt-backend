@@ -4,7 +4,9 @@ const cors = require('cors');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+// const verifyEmailRoutes = require('./routes/verifyEmailRoutes')
 const { swaggerUi, swaggerSpec } = require('./swaggerConfig');
 
 mongoose
@@ -19,9 +21,14 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 
+app.use('/api',userRoutes);
+
+// app.use('api/verifyemail' ,verifyEmailRoutes)
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api', chatRoutes);
+
 
 
 const PORT = process.env.PORT || 9000;
