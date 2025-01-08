@@ -14,15 +14,10 @@
  *         password:
  *           type: string
  *           description: The user's password
- *         usertype:
- *           type: string
- *           enum: [admin]
- *           description: The user's role (currently only admin is allowed)
  *       required:
  *         - username
  *         - email
  *         - password
- *         - usertype
  */
 
 /**
@@ -40,14 +35,6 @@
  *     responses:
  *       201:
  *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Success message
  *       400:
  *         description: Username or Email already exists
  *       500:

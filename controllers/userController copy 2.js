@@ -1,10 +1,9 @@
 const User = require('../models/User');
-// const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-// const nodemailer = require('nodemailer');
 
 const JWT_SECRET = process.env.JWT_SECRET;
+
 
 exports.authenticate = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
@@ -23,6 +22,14 @@ exports.authenticate = (req, res, next) => {
     }
   };
   
+
+exports.isAdmin = (req, res, next) => {
+    if (!req.user.usertype.admin) {
+      return res.status(403).json({ message: 'Access denied. Admins only.' });
+    }
+    next();
+  };  
+
   
   exports.getUserDetails = async (req, res) => {
     try {
@@ -42,22 +49,29 @@ exports.authenticate = (req, res, next) => {
     }
   };
   
+
+
   exports.updateUserDetails = async (req, res) => {
     const { mobile, pincode } = req.body;
   
-    if (!mobile || !pincode) {
-      return res.status(400).json({ message: 'Mobile number and pincode are required' });
+    if (!mobile && !pincode) {
+      return res.status(400).json({ message: 'At least one of mobile number or pincode is required' });
     }
   
     try {
-      const user = await User.findById(req.user.id);
+      const user = await User.findById(req.params.userId);
   
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
   
-      user.mobile = mobile;
-      user.pincode = pincode;
+      
+      if (mobile) {
+        user.mobile = mobile;
+      }
+      if (pincode) {
+        user.pincode = pincode;
+      }
   
       await user.save();
   
@@ -68,13 +82,15 @@ exports.authenticate = (req, res, next) => {
           email: user.email,
           mobile: user.mobile,
           pincode: user.pincode,
-        }, 
+        },
       });
     } catch (error) {
       console.error('Error in updateUserDetails:', error);
       res.status(500).json({ message: 'Server error' });
     }
   };
+  
+  
   
   exports.deleteUser = async (req, res) => {
     try {

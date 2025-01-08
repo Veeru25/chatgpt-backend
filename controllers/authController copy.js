@@ -3,10 +3,13 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const nodemailer = require('nodemailer');
-const UserDetails = require('../models/UserDetails');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+let nanoid;
+(async () => {
+  ({ nanoid } = await import('nanoid'));
+})();
 
 const validateEmail = (email) => {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -14,7 +17,7 @@ const validateEmail = (email) => {
 };
 
 exports.signup = async (req, res) => {
-  const { username, usertype, email, password } = req.body;
+  const { username, email, password } = req.body;
 
   if (!validateEmail(email)) {
     return res.status(400).json({ message: 'Invalid email format' });
@@ -33,63 +36,26 @@ exports.signup = async (req, res) => {
 
     const newUser = new User({
       username,
-      usertype,
       email,
       password: hashedPassword,
     });
 
     await newUser.save();
 
-    res.status(201).json({ message: 'User registered successfully', user: { username, email ,usertype } });
+    res.status(201).json({ message: 'User registered successfully', user: { username, email } });
   } catch (error) {
     console.error('Error in signup:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// exports.login = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   const emailLowerCase = email.toLowerCase()
-
-//   try {
-//     const user = await User.findOne({ email:emailLowerCase });
-//     if (!user) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
-
-//     const isPasswordValid = await bcrypt.compare(password, user.password);
-//     if (!isPasswordValid) {
-//       return res.status(401).json({ message: 'Invalid credentials' });
-//     }
-
-//     const token = jwt.sign(
-//       { id: user._id, usertype:user.usertype, email: user.email.toLowerCase(), username: user.username},
-//       JWT_SECRET,
-//       { expiresIn: '30m' }
-//     );
-
-//     res.status(200).json({
-//       message: 'Login successful',
-//       token,
-//       user: {
-//         username: user.username,
-//         email: user.email,
-//       },
-//     });
-//   } catch (error) {
-//     console.error('Error in login:', error);
-//     res.status(500).json({ message: 'Server error' });
-//   }
-// };
-
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
-  const emailLowerCase = email.toLowerCase();
+  const emailLowerCase = email.toLowerCase()
 
   try {
-    const user = await User.findOne({ email: emailLowerCase });
+    const user = await User.findOne({ email:emailLowerCase });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -100,19 +66,10 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, usertype: user.usertype, email: user.email.toLowerCase(), username: user.username },
+      { id: user._id, email: user.email.toLowerCase(), username: user.username },
       JWT_SECRET,
       { expiresIn: '30m' }
     );
-
-    const existingDetails = await UserDetails.findOne({ userId: user._id });
-    if (!existingDetails) {
-      const newDetails = new UserDetails({
-        userId: user._id,
-        email: user.email.toLowerCase(),
-      });
-      await newDetails.save();
-    }
 
     res.status(200).json({
       message: 'Login successful',
@@ -127,6 +84,7 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 
 exports.forgotpassword = async (req, res) => {
@@ -237,7 +195,7 @@ exports.resetpassword = async (req, res) => {
   try {
     const decoded = jwt.verify(otpToken, process.env.JWT_SECRET);
 
-    const user = await User.findOne({ email: decoded.email });
+    const user = await User.findOne({ email: decoded.email, otpToken });
 
     if (!user) {
       return res.status(404).json({ message: 'Invalid or expired token' });
@@ -261,4 +219,3 @@ exports.resetpassword = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
