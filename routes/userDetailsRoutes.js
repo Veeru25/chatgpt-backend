@@ -2,7 +2,7 @@
 
 const express = require('express');
 
-const { authenticate, getUserDetails,updateUserDetails,deleteUser ,isAdmin} = require('../controllers/userDetailsController');
+const { authenticate, getUserDetails,updateUserDetails,deleteUser ,isAdmin, getAllUsers} = require('../controllers/userDetailsController');
 
 const router = express.Router();
 
@@ -121,8 +121,11 @@ const router = express.Router();
 
 
 router.get('/user/details', authenticate, getUserDetails);
+
+router.get('/all-user-details', authenticate,isAdmin ,getAllUsers);
 // router.put('/user/update', authenticate, updateUserDetails);
 router.put('/user/update/:userId', authenticate, isAdmin, updateUserDetails);
+
 router.delete('/user/delete', authenticate,isAdmin, deleteUser);
 
 module.exports = router;

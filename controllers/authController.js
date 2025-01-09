@@ -7,7 +7,6 @@ const UserDetails = require('../models/UserDetails');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-
 const validateEmail = (email) => {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
@@ -102,7 +101,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, usertype: user.usertype, email: user.email.toLowerCase(), username: user.username },
       JWT_SECRET,
-      { expiresIn: '30m' }
+      { expiresIn: '30d' }
     );
 
     const existingDetails = await UserDetails.findOne({ userId: user._id });
